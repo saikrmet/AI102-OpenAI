@@ -3,6 +3,7 @@ import asyncio
 from dotenv import load_dotenv
 
 # Add Azure OpenAI package
+from openai import AsyncAzureOpenAI
 
 
 # Set to True to print the full response from OpenAI for each call
@@ -19,6 +20,7 @@ async def main():
         azure_oai_deployment = os.getenv("AZURE_OAI_DEPLOYMENT")
         
         # Configure the Azure OpenAI client
+        client = AsyncAzureOpenAI(azure_oai_deployment, azure_oai_key, "2024-02-15-preview")
         
 
         while True:
@@ -44,9 +46,16 @@ async def main():
 
 async def call_openai_model(system_message, user_message, model, client):
     # Get response from Azure OpenAI
+    grounding_text = open(file="grounding.txt", encoding="utf8").read().strip()
+    user_message = grounding_text + user_message
     
+    messages =[
+        {"role": "system", "content": system_message}, 
+        {"role": "user", "content": user_message}
+    ]
 
-
+    response = await client.chat.completions.create(model, messages, temperature=0.7, max_tokens=800)
+    
     if printFullResponse:
         print(response)
 
